@@ -6,11 +6,13 @@ import StudentManager from './components/StudentManager';
 import Scanner from './components/Scanner';
 import Reports from './components/Reports';
 import Settings from './components/Settings';
+import LoginModal from './components/LoginModal';
 
 function App() {
   // State Management
   const [activeTab, setActiveTab] = useState<ViewState>('students');
   const [showTeacherModal, setShowTeacherModal] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Data State (Initialize from LocalStorage or constants)
   const [classes, setClasses] = useState<ClassGroup[]>(() => {
@@ -94,21 +96,26 @@ function App() {
 
   return (
     <div className="flex min-h-screen bg-background-light font-sans text-slate-900">
+      {!isLoggedIn && <LoginModal onLogin={() => setIsLoggedIn(true)} />}
+
       {/* Sidebar (Desktop) */}
       <aside className="hidden md:flex w-64 border-r border-slate-200 bg-white flex-col fixed h-full z-20">
-        <div className="p-6">
-          <div className="flex items-center gap-3">
-            <div className="bg-primary rounded-lg p-2 flex items-center justify-center text-white shadow-lg shadow-primary/30">
-              <QrCode size={28} />
+        <div className="p-6 flex flex-col items-center border-b border-slate-100">
+          <div className="w-24 h-24 mb-3 overflow-hidden rounded-full border-4 border-slate-50 shadow-sm">
+            <img src="/logo_thoa.jpg" alt="Logo" className="w-full h-full object-cover" />
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="bg-primary rounded-lg p-1.5 flex items-center justify-center text-white shadow-md">
+              <QrCode size={18} />
             </div>
             <div>
               <h1 className="text-lg font-bold leading-none tracking-tight">QR Attend</h1>
-              <p className="text-slate-500 text-xs mt-1 font-medium">Hệ thống quản lý</p>
             </div>
           </div>
+          <p className="text-slate-400 text-xs mt-1 font-medium text-center">Hệ thống quản lý</p>
         </div>
 
-        <nav className="flex-1 px-4 space-y-2 mt-2">
+        <nav className="flex-1 px-4 space-y-2 mt-4">
           <SidebarLink
             active={activeTab === 'students'}
             onClick={() => setActiveTab('students')}
@@ -138,17 +145,24 @@ function App() {
         <div className="p-4 border-t border-slate-200">
           <div
             onClick={() => setShowTeacherModal(true)}
-            className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer group"
           >
-            <img
-              src="/teacher-photo.jpg"
-              alt="Avatar"
-              className="w-10 h-10 rounded-full object-cover shadow-sm border-2 border-primary"
-            />
+            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold border-2 border-white shadow-sm">
+              T
+            </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-slate-900 truncate">Trần Thị Kim Thoa</p>
-              <p className="text-xs text-slate-500 truncate">THPT Hoàng Diệu</p>
+              <p className="text-xs text-slate-500 truncate group-hover:text-primary transition-colors">Đăng xuất</p>
             </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm("Bạn có chắc muốn đăng xuất?")) setIsLoggedIn(false);
+              }}
+              className="text-slate-400 hover:text-red-500 transition-colors"
+            >
+              <LogOut size={18} />
+            </button>
           </div>
         </div>
       </aside>
@@ -157,12 +171,19 @@ function App() {
       <main className="flex-1 md:ml-64 w-full relative">
         {/* Mobile Header */}
         <header className="md:hidden sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-primary rounded-lg p-1.5 text-white">
-              <QrCode size={20} />
+          <div className="flex items-center gap-3">
+            <img src="/logo_thoa.jpg" alt="Logo" className="w-10 h-10 rounded-full object-cover border border-slate-200" />
+            <div>
+              <span className="font-bold text-lg block leading-none">QR Attend</span>
+              <span className="text-[10px] text-slate-500 font-medium">Trần Thị Kim Thoa</span>
             </div>
-            <span className="font-bold text-lg">QR Attend</span>
           </div>
+          <button
+            onClick={() => setIsLoggedIn(false)}
+            className="p-2 text-slate-500 hover:text-red-500"
+          >
+            <LogOut size={20} />
+          </button>
         </header>
 
         <div className="p-4 md:p-8 max-w-7xl mx-auto h-full">
@@ -239,7 +260,7 @@ function App() {
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
               </button>
               <img
-                src="/teacher-avatar.jpg"
+                src="/logo_thoa.jpg"
                 alt="Cô giáo Trần Thị Kim Thoa"
                 className="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-white shadow-xl"
               />
