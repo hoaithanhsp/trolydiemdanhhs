@@ -53,18 +53,34 @@ const Scanner: React.FC<ScannerProps> = ({ students, schedules, onScan, existing
          const cleanText = decodedText.trim();
          let student: Student | undefined = undefined;
 
+         console.log("=== QR Scan Debug ===");
+         console.log("Scanned text:", cleanText);
+         console.log("Total students:", students.length);
+
          // Thử parse JSON trước
          try {
             const data = JSON.parse(cleanText);
+            console.log("Parsed QR data:", data);
+
             // Tìm theo id hoặc studentId trong JSON
-            student = students.find((s) =>
-               s.id === data.id ||
-               s.studentId === data.studentId ||
-               s.studentId === data.id
-            );
+            student = students.find((s) => {
+               const match = s.id === data.id ||
+                  s.studentId === data.studentId ||
+                  s.studentId === data.id ||
+                  s.id === data.studentId;
+               if (match) console.log("Found by JSON match:", s.name);
+               return match;
+            });
+
+            // Fallback: Tìm theo name + class nếu có
+            if (!student && data.name && data.class) {
+               student = students.find(s =>
+                  s.name === data.name && s.className === data.class
+               );
+               if (student) console.log("Found by name+class:", student.name);
+            }
          } catch (e) {
-            // Không phải JSON, đây có thể là mã học sinh thuần hoặc qrContent raw
-            console.log("QR content is not JSON, trying raw match:", cleanText);
+            console.log("QR content is not JSON, trying raw match");
          }
 
          // Fallback 1: Tìm theo studentId hoặc id từ raw text
@@ -73,11 +89,13 @@ const Scanner: React.FC<ScannerProps> = ({ students, schedules, onScan, existing
                s.studentId === cleanText ||
                s.id === cleanText
             );
+            if (student) console.log("Found by raw ID:", student.name);
          }
 
          // Fallback 2: Tìm theo qrContent khớp chính xác
          if (!student) {
             student = students.find(s => s.qrContent === cleanText);
+            if (student) console.log("Found by exact qrContent:", student.name);
          }
 
          // Fallback 3: So sánh JSON qrContent
@@ -86,17 +104,39 @@ const Scanner: React.FC<ScannerProps> = ({ students, schedules, onScan, existing
                try {
                   const studentQR = JSON.parse(s.qrContent);
                   const scannedQR = JSON.parse(cleanText);
-                  return studentQR.id === scannedQR.id ||
-                     studentQR.studentId === scannedQR.studentId;
+                  const match = studentQR.id === scannedQR.id ||
+                     studentQR.studentId === scannedQR.studentId ||
+                     (studentQR.name === scannedQR.name && studentQR.class === scannedQR.class);
+                  if (match) console.log("Found by qrContent JSON compare:", s.name);
+                  return match;
                } catch {
                   return false;
                }
             });
          }
 
+         // Fallback 4: Tìm theo tên (partial match)
+         if (!student) {
+            try {
+               const data = JSON.parse(cleanText);
+               if (data.name) {
+                  student = students.find(s =>
+                     s.name.toLowerCase().includes(data.name.toLowerCase()) ||
+                     data.name.toLowerCase().includes(s.name.toLowerCase())
+                  );
+                  if (student) console.log("Found by partial name:", student.name);
+               }
+            } catch { }
+         }
+
          if (!student) {
             console.error("Student not found for QR:", cleanText);
-            console.log("Available students:", students.map(s => ({ id: s.id, studentId: s.studentId, qrContent: s.qrContent })));
+            console.log("Available students:", students.map(s => ({
+               id: s.id,
+               studentId: s.studentId,
+               name: s.name,
+               qrContent: s.qrContent
+            })));
             showError("Không tìm thấy học sinh trong hệ thống!");
             return;
          }
