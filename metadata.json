@@ -1,0 +1,7 @@
+{
+  "name": "QR Attendance",
+  "description": "A minimalist, Apple-style attendance tracking application using QR codes.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
